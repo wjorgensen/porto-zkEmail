@@ -1,0 +1,116 @@
+{
+  "id": "porto-auth-v1",
+  "name": "Porto Authentication",
+  "version": "1.0.0",
+  "description": "Email verification for Porto account operations",
+  
+  "emailQuery": {
+    "subject": "PORTO-AUTH-*",
+    "from": "yexfinance@gmail.com",
+    "domain": "gmail.com"
+  },
+  
+  "extractors": [
+    {
+      "name": "authCode",
+      "description": "6-digit authentication code",
+      "regex": "PORTO-AUTH-([0-9]{6})",
+      "location": "subject",
+      "maxLength": 6,
+      "isPublic": true
+    },
+    {
+      "name": "chainId",
+      "description": "Blockchain chain ID",
+      "regex": "PORTO\\|([0-9]+)\\|",
+      "location": "body",
+      "maxLength": 10,
+      "isPublic": true
+    },
+    {
+      "name": "walletAddress",
+      "description": "User's wallet address",
+      "regex": "PORTO\\|[0-9]+\\|([0-9a-fA-Fx]+)\\|",
+      "location": "body",
+      "maxLength": 42,
+      "isPublic": true
+    },
+    {
+      "name": "action",
+      "description": "Action being performed",
+      "regex": "PORTO\\|[0-9]+\\|[^|]+\\|([^|]+)\\|",
+      "location": "body",
+      "maxLength": 32,
+      "isPublic": true
+    },
+    {
+      "name": "keyHash",
+      "description": "Key hash (0x0 for setEmail)",
+      "regex": "PORTO\\|[0-9]+\\|[^|]+\\|[^|]+\\|([0-9a-fA-Fx]+)\\|",
+      "location": "body",
+      "maxLength": 66,
+      "isPublic": false
+    },
+    {
+      "name": "nonce",
+      "description": "Unique nonce",
+      "regex": "PORTO\\|[0-9]+\\|[^|]+\\|[^|]+\\|[^|]+\\|([0-9]+)\\|",
+      "location": "body",
+      "maxLength": 20,
+      "isPublic": true
+    },
+    {
+      "name": "timestamp",
+      "description": "Unix timestamp",
+      "regex": "PORTO\\|[0-9]+\\|[^|]+\\|[^|]+\\|[^|]+\\|[^|]+\\|([0-9]+)\\|",
+      "location": "body",
+      "maxLength": 10,
+      "isPublic": true
+    },
+    {
+      "name": "keyId",
+      "description": "Device key ID",
+      "regex": "PORTO\\|[0-9]+\\|[^|]+\\|[^|]+\\|[^|]+\\|[^|]+\\|[^|]+\\|([0-9a-fA-Fx]+)",
+      "location": "body",
+      "maxLength": 66,
+      "isPublic": false
+    }
+  ],
+  
+  "publicInputs": [
+    "authCode",
+    "chainId",
+    "walletAddress",
+    "action",
+    "nonce",
+    "timestamp",
+    "emailFromAddress",
+    "emailDomain",
+    "dkimPublicKeyHash"
+  ],
+  
+  "circuitParams": {
+    "maxEmailSize": 4096,
+    "maxHeaderSize": 512,
+    "maxBodySize": 3584,
+    "shaPrecomputeSelector": true,
+    "removeSoftLineBreaks": true,
+    "ignoreBodyHashCheck": false,
+    "enableBodyMasking": false
+  },
+  
+  "dkimParams": {
+    "headerSelector": "google",
+    "selectorType": "domain",
+    "maxSignatureLength": 1024,
+    "publicKeyModulusLength": 2048,
+    "requiredDomains": ["gmail.com"]
+  },
+  
+  "validationRules": {
+    "timestampWindow": 900,
+    "nonceUniqueness": true,
+    "actionWhitelist": ["setEmail", "addKey", "revokeKey"],
+    "chainIdWhitelist": [31337, 8453, 84532]
+  }
+}

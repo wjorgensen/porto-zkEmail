@@ -1,0 +1,23 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Dependencies
+node_modules/
+
+# Circuit files (if large)
+circuits/*.zkey
+circuits/*.wasm
+circuits/*.r1cs
+
+# Proof cache
+proof-cache/
+
+# OS files
+.DS_Store
+Thumbs.db
