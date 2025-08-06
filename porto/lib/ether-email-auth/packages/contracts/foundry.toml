@@ -1,0 +1,47 @@
+[profile.default]
+src = "src"
+out = "artifacts"
+libs = ["../../node_modules", "lib"]
+optimizer = true
+# The following line `via-ir = true` is needed to compile this project using zksync features
+# via-ir = true 
+optimizer-runs = 20_000
+fs_permissions = [
+    { access = "read", path = "./artifacts/WETH9.sol/WETH9.json" },
+    { access = "read", path = "./test/build_integration" },
+    { access = "read", path = "./zkout/ERC1967Proxy.sol/ERC1967Proxy.json" },
+    { access = "read", path = "./artifacts" },
+]
+
+solc = "0.8.26"
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+# OpenZeppelin
+ffi = true
+ast = true
+build_info = true
+extra_output = ["storageLayout"]
+
+# For missing libraries, please comment out following line and replace some placeholders if you use foundry-zksync
+#libraries = [
+#    "{PROJECT_DIR}/packages/contracts/src/libraries/DecimalUtils.sol:DecimalUtils:{DEPLOYED_ADDRESS}",
+#    "{PROJECT_DIR}/packages/contracts/src/libraries/CommandUtils.sol:CommandUtils:{DEPLOYED_ADDRESS}",
+#    "{PROJECT_DIR}/packages/contracts/src/libraries/StringUtils.sol:StringUtils:{DEPLOYED_ADDRESS}"
+#]
+
+[rpc_endpoints]
+localhost = "${LOCALHOST_RPC_URL}"
+sepolia = "${SEPOLIA_RPC_URL}"
+mainnet = "${MAINNET_RPC_URL}"
+
+[etherscan]
+# sepolia = { key = "${ETHERSCAN_API_KEY}" }
+# mainnet = { key = "${ETHERSCAN_API_KEY}" }
+
+[profile.default.zksync]
+src = 'src'
+libs = ["node_modules", "lib"]
+fallback_oz = true
+is_system = true
+mode = "3"

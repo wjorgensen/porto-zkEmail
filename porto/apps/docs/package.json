@@ -1,0 +1,40 @@
+{
+  "name": "docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "NODE_OPTIONS=\"--max-old-space-size=8192\" vocs build --searchIndex false && vocs search-index",
+    "check:types": "tsc --noEmit",
+    "dev": "vocs dev",
+    "preview": "vocs preview"
+  },
+  "dependencies": {
+    "@ariakit/react": "catalog:",
+    "@porto/apps": "workspace:*",
+    "@tanstack/query-sync-storage-persister": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-query-persist-client": "catalog:",
+    "cva": "catalog:",
+    "porto": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "^7",
+    "shiki": "^1",
+    "sonner": "catalog:",
+    "tailwindcss": "catalog:",
+    "viem": "catalog:",
+    "vocs": "latest",
+    "wagmi": "catalog:"
+  },
+  "devDependencies": {
+    "@iconify/json": "catalog:",
+    "@tanstack/react-query-devtools": "catalog:",
+    "@svgr/core": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "unplugin-icons": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-mkcert": "catalog:"
+  }
+}

@@ -1,0 +1,75 @@
+# `wallet_getCallsStatus`
+
+Gets the status of a call bundle.
+
+## Request
+
+```ts
+type Request = {
+  method: 'wallet_getCallsStatus',
+  params: [
+    /** ID of the call bundle. */
+    id: `0x${string}`
+  ]
+}
+```
+
+## Response
+
+```ts
+type Response = {
+  /** Whether the calls were submitted atomically. */
+  atomic: true
+  /** Chain ID the calls were submitted to. */
+  chainId: `0x${string}`,
+  /** ID of the call bundle. */
+  id: `0x${string}`,
+  /** Transaction receipts of the calls. */
+  receipts: {
+    /** Block hash. */
+    blockHash: `0x${string}`,
+    /** Block number. */
+    blockNumber: `0x${string}`,
+    /** Gas used by the transaction. */
+    gasUsed: `0x${string}`,
+    /** Logs of the call. */
+    logs: {
+      /** Address of the contract that emitted the log. */
+      address: `0x${string}`,
+      /** Data of the log. */
+      data: `0x${string}`,
+      /** Topics of the log. */
+      topics: `0x${string}`[],
+    }[],
+    /** Status. */
+    status: `0x${string}`,
+    /** Transaction hash. */
+    transactionHash: `0x${string}`,
+  }[],
+  /** Status code. See "Status Codes" below. */
+  status: number
+}
+```
+
+## Example
+
+```ts twoslash
+import { Porto } from 'porto'
+
+const { provider } = Porto.create()
+
+const status = await provider.request({ // [!code focus]
+  method: 'wallet_getCallsStatus', // [!code focus]
+  params: ['0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'], // [!code focus]
+}) // [!code focus]
+```
+
+## Status Codes
+
+| Code  | Status Text | Description                                                                                                                    |
+| ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `100` | `pending`   | Batch has been received by the wallet but has not completed execution onchain (pending).                                       |
+| `200` | `success`   | Batch has been included onchain without reverts, receipts array contains info of all calls (confirmed).                        |
+| `400` | `failure`   | Batch has not been included onchain and wallet will not retry (offchain failure).                                              |
+| `500` | `failure`   | Batch reverted completely and only changes related to gas charge may have been included onchain (chain rules failure).         |
+| `600` | `failure`   | Batch reverted partially and some changes related to batch calls may have been included onchain (partial chain rules failure). |

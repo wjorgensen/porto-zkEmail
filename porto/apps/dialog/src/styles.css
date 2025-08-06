@@ -1,0 +1,20 @@
+@import "@porto/apps/styles.css";
+
+@theme {
+  --text-base: 15px;
+  --text-base--line-height: calc(1.325 / 1);
+}
+
+html,
+:host {
+  @apply bg-transparent;
+}
+
+body {
+  @apply text-base;
+}
+
+[data-dialog] {
+  --height-button: 40px;
+  --radius-default: 8px;
+}

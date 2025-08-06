@@ -1,0 +1,150 @@
+import { TryItOut } from '../../../../components/TryItOut'
+
+# `Porto.create`
+
+Creates a new Porto instance.
+
+## Imports
+
+:::code-group
+
+```ts [Named]
+import { Porto } from 'porto'
+```
+
+```ts [Entrypoint]
+import * as Porto from 'porto/Porto'
+```
+
+:::
+
+## Examples
+
+The simplest way to create a new Porto instance is to call the `Porto.create(){:ts}` function.
+This will automatically inject Porto's provider into your Application via [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963).
+
+```ts twoslash
+import { Porto } from 'porto'
+
+Porto.create()
+```
+
+:::tip
+You can turn off announcement of the provider by passing `announceProvider: false{:ts}` as an option.
+
+```ts twoslash
+import { Porto } from 'porto'
+
+const porto = Porto.create({ announceProvider: false })
+```
+
+:::
+
+### Accessing the Provider
+
+You can access Porto's [EIP-1193 Provider](https://eips.ethereum.org/EIPS/eip-1193) directly via the `provider` instance.
+
+```ts twoslash
+import { Porto } from 'porto'
+
+const porto = Porto.create()
+
+const accounts = await porto.provider.request({
+  method: 'wallet_connect',
+})
+```
+
+<TryItOut
+  fn={async ({ provider }) => {
+    const accounts = await provider.request({
+      method: 'wallet_connect',
+    })
+    return accounts
+  }}
+  transformResultCode={(code) => {
+    return 'const accounts = ' + code
+  }}
+/>
+
+## Parameters
+
+### announceProvider
+
+- **Type:** `boolean{:ts}`
+- **Default:** `true{:ts}`
+
+Whether to announce the provider via [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963).
+
+### authUrl
+
+- **Type:** `string | { logout: string; nonce: string; verify: string } | undefined`
+
+URL(s) to use for [SIWE authentication](/sdk/guides/authentication).
+
+### chains
+
+- **Type:** `readonly [Chains.Chain, ...Chains.Chain[]]{:ts}`
+- **Default:** `[Chains.baseSepolia]{:ts}`
+
+List of supported chains.
+
+:::tip
+See [`Chains`](/sdk/api/chains) for a list of Porto-supported chains.
+:::
+
+### feeToken
+
+- **Type:** `'ETH' | 'EXP' | 'USDC'`
+- **Default:** `EXP` (note: will change to `USDC` on Porto launch)
+
+Token to use to pay for fees.
+
+### merchantRpcUrl
+
+- **Type:** `string | undefined`
+
+URL to use for merchant functionality (e.g. [fee sponsorship](/sdk/guides/sponsoring), subsidizing, etc).
+
+### mode
+
+- **Type:** `Mode.Mode{:ts}`
+- **Default:** `Mode.dialog(){:ts}`
+
+Mode to use.
+
+Available:
+
+- [`Mode.contract()`](#TODO): Requests & signing is handled locally, and coordinated with the delegation contract.
+- [`Mode.dialog()`](#TODO): Requests & signing is handled via an iframe or popup dialog.
+- [`Mode.rpcServer()`](#TODO): Requests & signing is handled locally, and coordinated with the Porto RPC.
+
+:::warning
+Using `Mode.contract()` or `Mode.rpcServer()` comes with some caveats. Please refer to the [`Mode.contract()`](#TODO) or [`Mode.rpcServer()`](#TODO) documentation for more information.
+:::
+
+### storage
+
+- **Type:** `Storage.Storage{:ts}`
+- **Default:** `Storage.idb(){:ts}`
+
+Storage to use.
+
+Available:
+
+- [`Storage.idb()`](/sdk/api/storage#storageidb): Uses IndexedDB
+- [`Storage.memory()`](/sdk/api/storage#storagememory): Uses In-memory store
+- [`Storage.localStorage()`](/sdk/api/storage#storagelocalstorage): Uses `window.localStorage{:ts}`
+- [`Storage.cookie()`](/sdk/api/storage#storagecookie): Uses `document.cookie{:ts}`
+
+### transports
+
+- **Type:** `{ [chainId: string]: Transport }{:ts}`
+- **Default:** `{}{:ts}`
+
+Transport to use for each chain.
+
+## Return Type
+
+`Porto{:ts}`
+
+The Porto instance.

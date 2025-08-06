@@ -1,0 +1,42 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = git@github.com:wjorgensen/porto.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+	vscode-merge-base = origin/main
+	vscode-merge-base = origin/main
+[submodule "contracts/account"]
+	active = true
+	url = https://github.com/ithacaxyz/account.git
+[submodule "contracts/demo/lib/forge-std"]
+	active = true
+	url = https://github.com/foundry-rs/forge-std.git
+[submodule "contracts/demo/lib/solady"]
+	active = true
+	url = https://github.com/Vectorized/solady.git
+[submodule "lib/zk-email-verify"]
+	url = https://github.com/zkemail/zk-email-verify
+	active = true
+[submodule "lib/ether-email-auth"]
+	url = https://github.com/zkemail/ether-email-auth
+	active = true
+[submodule "lib/solady"]
+	url = https://github.com/vectorized/solady
+	active = true
+[submodule "lib/forge-std"]
+	url = https://github.com/foundry-rs/forge-std
+	active = true
+[submodule "contracts/accountV2/lib/solady"]
+	url = https://github.com/vectorized/solady
+	active = true
+[submodule "contracts/accountV2/lib/forge-std"]
+	url = https://github.com/foundry-rs/forge-std
+	active = true

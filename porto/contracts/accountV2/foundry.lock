@@ -1,0 +1,35 @@
+{
+  "../../lib/zk-email-verify": {
+    "rev": "b193cf0c760456b837b2bbcf7b2c72d5bb3f43c3"
+  },
+  "../demo/lib/solady": {
+    "rev": "459b53da824c326e4a018a8e9380ffe5ff76437a"
+  },
+  "../../lib/solady": {
+    "rev": "a5bb996e91aae5b0c068087af7594d92068b12f1"
+  },
+  "../demo/lib/forge-std": {
+    "rev": "9530d9ec702df1b27b7f8f50c0a63a11b1b5fba9"
+  },
+  "lib/forge-std": {
+    "tag": {
+      "name": "v1.10.0",
+      "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+    }
+  },
+  "lib/solady": {
+    "tag": {
+      "name": "v0.1.24",
+      "rev": "a5bb996e91aae5b0c068087af7594d92068b12f1"
+    }
+  },
+  "../../lib/forge-std": {
+    "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+  },
+  "../account": {
+    "rev": "a2f5bc5b7ea205b1f1e82f81d4ee467713c5b2b1"
+  },
+  "../../lib/ether-email-auth": {
+    "rev": "895e1fe943e967b0faab6a476f3b82b37d14300d"
+  }
+}

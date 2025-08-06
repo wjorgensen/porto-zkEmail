@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relayer-email-tx-auth
+  namespace: email-tx-auth
+  labels:
+    app: relayer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: relayer
+  template:
+    metadata:
+      labels:
+        app: relayer
+    spec:
+      containers:
+        - name: relayer-container
+          image: bisht13/generic-relayer-7:latest
+          ports:
+            - containerPort: 4500
+          resources:
+            requests:
+              cpu: 2
+              memory: 4Gi
+            limits:
+              cpu: 4
+              memory: 8Gi
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 4500
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 4500
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - name: pem-volume
+              mountPath: "/relayer/packages/relayer/.ic.pem"
+              subPath: ".ic.pem"
+            - name: secret-volume
+              mountPath: "/relayer/packages/relayer/config.json"
+              subPath: "config.json"
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: relayer-secret-email-tx-auth
+            items:
+              - key: config.json
+                path: config.json
+        - name: pem-volume
+          secret:
+            secretName: relayer-secret-email-tx-auth
+            items:
+              - key: ICPEM
+                path: ".ic.pem"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relayer-smtp
+  namespace: email-tx-auth
+  labels:
+    app: relayer-smtp
+spec:
+  replicas: 1 # Fixed replica count
+  selector:
+    matchLabels:
+      app: relayer-smtp
+  template:
+    metadata:
+      labels:
+        app: relayer-smtp
+    spec:
+      containers:
+        - name: smtp-container
+          image: bisht13/relayer-smtp:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: relayer-smtp-secret
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relayer-imap
+  namespace: email-tx-auth
+  labels:
+    app: relayer-imap
+spec:
+  replicas: 1 # Fixed replica count
+  selector:
+    matchLabels:
+      app: relayer-imap
+  template:
+    metadata:
+      labels:
+        app: relayer-imap
+    spec:
+      containers:
+        - name: imap-container
+          image: bisht13/relayer-imap-new:latest
+          envFrom:
+            - secretRef:
+                name: relayer-imap-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: relayer-svc-email-tx-auth
+  namespace: email-tx-auth
+spec:
+  selector:
+    app: relayer
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 4500
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: relayer-smtp-svc
+  namespace: email-tx-auth
+spec:
+  selector:
+    app: relayer-smtp
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: relayer-email-tx-auth-hpa
+  namespace: email-tx-auth
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: relayer-email-tx-auth
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

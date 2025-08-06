@@ -1,0 +1,18 @@
+# pack-refs with: peeled fully-peeled sorted 
+3122a40f419ea7297525270669e334012beb20d0 refs/remotes/origin/backup/email-auth-simplification
+9cc32e84315535d54e86030e99d6f91817976060 refs/remotes/origin/chore/example-env
+536ed77df501c581de8264c4f2326bc97d9a1de2 refs/remotes/origin/email-recovery
+ed91a1c275196c16c6922681009ae67496c0cc92 refs/remotes/origin/exp/ci
+ba40e09f51e984bd371b68252bd42bd5636190cc refs/remotes/origin/feat/new-forced-subject
+dee988c6e3663cfe2cc166423fc0d90625d39c54 refs/remotes/origin/feat/notification-service
+1c745739c2be6ac6d0a1a4c7e16ebde08a7f72e5 refs/remotes/origin/feat/safe-notification-service
+44d118d66f9303581b03d8c2d048533207952b11 refs/remotes/origin/feat/standalone-notification-service
+a262f2913415aa6bd2817ddd294c1d057061b09c refs/remotes/origin/feat/update-deployment-scripts
+3a1ed593e9c16614232c2eb85a03833b35b22839 refs/remotes/origin/feat/use-salt-in-deployment-script
+895e1fe943e967b0faab6a476f3b82b37d14300d refs/remotes/origin/main
+05d3910fd14523c84d6ed0ec12e16624b66437d3 refs/remotes/origin/phone-number
+a45d0fd8bd9591f70844931f63993fc3a4399687 refs/remotes/origin/recovery/fix/outlook
+aac9ec0cff891e25a111cd46ad1ad65c5248c442 refs/remotes/origin/recovery/more-domain-support
+68d03a4448cbc22ad51dd8a9c49a14577507f834 refs/remotes/origin/zkfriendly/sol-119-circuits-contract-poseidon-hash-issue
+4876eee8798331f7419dc2b2051fb19eab171351 refs/remotes/origin/zkfriendly/sol-133-build-and-setup-scripts-for-circuits
+6199405050d957f224264f65f74c3109c7ca97f1 refs/remotes/origin/zkfriendly/sol-45-support-for-outlookcom-in-email-recovery

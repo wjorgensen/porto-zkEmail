@@ -1,0 +1,36 @@
+{
+  "name": "@porto/apps",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.ts",
+    "./components": "./components/index.ts",
+    "./contracts": "./_generated/contracts.ts",
+    "./hooks": "./hooks/index.ts",
+    "./styles.css": "./styles/index.css"
+  },
+  "scripts": {
+    "check:types": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@sentry/react": "catalog:",
+    "@tanstack/query-sync-storage-persister": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-query-persist-client": "catalog:",
+    "cva": "catalog:",
+    "porto": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "wagmi": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "unplugin-icons": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

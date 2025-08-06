@@ -1,0 +1,133 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on",
+        "useSortedProperties": "on"
+      }
+    },
+    "includes": ["**", "!scripts/**"]
+  },
+  "css": {
+    "formatter": {
+      "enabled": true
+    },
+    "linter": {
+      "enabled": true
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!contracts/**",
+      "!coverage/**",
+      "!dist/**",
+      "!extension/.output/**",
+      "!extension/.wxt/**",
+      "!src/core/internal/_generated/**",
+      "!test/**/_generated/**",
+      "!apps/**/routeTree.gen.ts",
+      "!apps/**/dist/**",
+      "!**/_/**",
+      "!**/_dist/**",
+      "!**/dist/**",
+      "!**/node_modules/**",
+      "!**/.next/**"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true
+    },
+    "linter": {
+      "enabled": true
+    },
+    "parser": {
+      "allowTrailingCommas": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "a11y": {
+        "useKeyWithClickEvents": "off"
+      },
+      "complexity": {
+        "noBannedTypes": "off"
+      },
+      "correctness": {
+        "noInvalidPositionAtImportRule": "off",
+        "noUnusedVariables": "off",
+        "useExhaustiveDependencies": "error"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "fix": "safe",
+          "level": "error",
+          "options": {
+            "functions": ["clsx", "cx", "cva"]
+          }
+        }
+      },
+      "performance": {
+        "noDelete": "off"
+      },
+      "recommended": true,
+      "style": {
+        "noInferrableTypes": "error",
+        "noNonNullAssertion": "off",
+        "noParameterAssign": "error",
+        "noUnusedTemplateLiteral": "error",
+        "noUselessElse": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useNumberNamespace": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noAssignInExpressions": "off",
+        "noExplicitAny": "off",
+        "noShadowRestrictedNames": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "assist": {
+        "actions": {
+          "source": {
+            "useSortedKeys": "off"
+          }
+        }
+      },
+      "includes": [
+        "**/*tsconfig.json",
+        "**/*tsconfig.*.json",
+        "**/*package.json"
+      ]
+    }
+  ],
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}

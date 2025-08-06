@@ -1,0 +1,23 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+	worktree = ../../../../contracts/account
+[remote "origin"]
+	url = https://github.com/ithacaxyz/account.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+[submodule "lib/forge-std"]
+	active = true
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/safe-singleton-deployer-sol"]
+	active = true
+	url = https://github.com/wilsoncusack/safe-singleton-deployer-sol
+[submodule "lib/solady"]
+	active = true
+	url = https://github.com/vectorized/solady

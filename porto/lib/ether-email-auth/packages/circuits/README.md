@@ -1,0 +1,123 @@
+# Circuit Architecture
+## Circom Circuits
+### Main Circuits
+
+We provide one main circuit as follows.
+
+#### `email_auth.circom`
+A circuit to verify that a message in the subject is authorized by a user of an account salt, derived from an email address in the From field and a random field value called account code.
+
+The circuit has the following blueprint ID and download URLs for the proving key and witness generator:
+```json
+{
+  "blueprintId": "7f3c3bc2-7c5d-4682-8d7f-f3d2f9046722",
+  "zkeyDownloadUrl": "https://storage.googleapis.com/circom-ether-email-auth/v2.0.2-dev/circuit_zkey.zip",
+  "circuitCppDownloadUrl": "https://storage.googleapis.com/circom-ether-email-auth/v2.0.2-dev/circuit.zip"
+}
+```
+
+It takes as input the following data:
+1. a padded email header `padded_header`.
+It takes as input the following data:
+1. a padded email header `padded_header`.
+2. the bytes of the padded email header `padded_header_len`.
+3. an RSA public key `public_key`.
+4. an RSA signature `signature`.
+5. the sender's account code `account_code`.
+6. a starting position of the From field in the email header `from_addr_idx`.
+7. a starting position of the Subject field in the email header `subject_idx`.
+8. a starting position of the email domain in the email address of the From field `domain_idx`.
+10. a starting position of the timestamp in the email header `timestamp_idx`.
+11. a starting position of the invitation code in the email header `code_idx`.
+
+Its instances are as follows:
+1. an email domain `domain_name`.
+2. a Poseidon hash of the RSA public key `public_key_hash`.
+3. a nullifier of the email `email_nullifier`.
+4. a timestamp in the email header `timestamp`.
+5. a masked subject where characters either in the email address or in the invitation code are replaced with zero  `masked_subject_str`.
+6. an account salt `account_salt`.
+7. a flag whether the email header contains the invitation code `is_code_exist`.
+
+## How to Use
+### Build circuits
+`yarn && yarn build`
+
+### Run tests
+At `packages/circuits`, make a `build` directory, download the zip file from the following link, and place its unzipped directory under `build`.
+https://drive.google.com/file/d/1TChinAnHr9eV8H_OV9SVReF8Rvu6h1XH/view?usp=sharing
+
+Then, move `email_auth.zkey` in the unzipped directory `params` to `build`. 
+
+Then run the following command.
+`yarn test`
+
+### Generate proving keys and verifier contracts for main circuits
+`yarn dev-setup`
+
+## Specification
+The `email_auth.circom` makes constraints and computes the public output as follows.
+1. Assert that `signature` is valid for `padded_header` and `public_key`.
+2. Let `public_key_hash` be `PoseidonHash(public_key)`.
+3. Let `email_nullifier` be `PoseidonHash(PoseidonHash(signature))`.
+4. Let `from_addr` be `padded_header[from_addr_idx:from_addr_idx+256]` .
+5. Let `subject` be `padded_header[subject_idx:subject_idx+MAX_SUBJECT_BYTES]` .
+6. Let `domain_name` be `padded_header[domain_idx:domain_idx+255]` .
+7. Let `is_time_exist` be 1 if `padded_header` satisfies the regex of the timestamp field.
+8. Let `timestamp_str` be `padded_header[timestamp_idx:timestamp_idx+10]`.
+9. If `is_time_exist` is 1, let `timestamp` be an integer parsing `timestamp_str` as a digit string. Otherwise, let `timestamp` be zero.
+10. Let `is_code_exist` be 1 if `padded_header` satisfies the regex of the invitation code.
+11. Let `code_str` be `padded_header[code_idx:code_idx+64]`.
+12. Let `embedded_code`  be an integer parsing `code_str` as a hex string.
+13. If `is_code_exist` is 1, assert that `embedded_code` is equal to `account_code`.
+14. Let `account_salt` be `PoseidonHash(from_addr|0..0, account_code, 0)`.
+15. Let `masked_subject` be a string that removes the invitation code with the prefix `code_str` and one email address from `subject`, if they appear in `subject`.
+
+Note that the email address in the subject is assumbed not to overlap with the invitation code.
+
+
+#### `email_auth_with_body_parsing_with_qp_encoding.circom`
+A circuit to verify that a message in the email body, called command, is authorized by a user of an account salt, derived from an email address in the From field and a random field value called account code.
+This is basically the same as the `email_auth.circom` described above except for the following features:
+- Instead of `subject_idx`, it additionally takes as a private input a padded email body `padded_cleaned_body` and an index of the command in the email body `command_idx`.
+- It extracts a substring `command` between a prefix `(<div id=3D\"[^\"]*zkemail[^\"]*\"[^>]*>)"` and a suffix `</div>` from `padded_cleaned_body`.
+- It outputs `masked_command` instead of `masked_subject`, which removes the invitation code with the prefix and one email address from `command`.
+
+## How to Build the Container Image for Unit Tests in GitHub Actions
+
+To speed up unit testing in GitHub Actions, we run the tests on our Kubernetes cluster. 
+We create a container image and execute jobs on the cluster from GitHub Actions using the job configuration file `kubernetes/circuit-test-job.yml`.
+
+Follow these steps to build and push the container image for unit tests.
+
+### Steps
+
+1. **Navigate to the Directory**
+
+   ```bash
+   cd .github/circuits-runner
+   ```
+
+2. **Create and Use a Buildx Builder**
+
+   ```bash
+   docker buildx create --use
+   ```
+
+3. **Log in to Docker Hub**
+
+   ```bash
+   docker login
+   ```
+
+4. **Build and Push the Image**
+
+   Build the image for multiple platforms and push it to Docker Hub.
+
+   ```bash
+   docker buildx build --platform linux/amd64,linux/arm64 \
+       -t YOUR_DOCKERHUB_USERNAME/circuits-runner:latest \
+       --push .
+   ```
+
+Replace `YOUR_DOCKERHUB_USERNAME` with your actual Docker Hub username.

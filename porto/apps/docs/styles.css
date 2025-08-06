@@ -1,0 +1,77 @@
+@import "@porto/apps/styles.css";
+@import "tailwindcss" important;
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+[data-layout="landing"] {
+  --vocs-content_width: calc(957px + var(--vocs-space_16) * 2);
+  --vocs-content_horizontalPadding: var(--vocs-space_16);
+  --vocs-content_verticalPadding: var(--vocs-space_32);
+}
+
+[data-layout="landing"] .vocs_DesktopTopNav {
+  max-width: var(--vocs-content_width);
+  padding: 0 var(--vocs-content_horizontalPadding);
+  margin: 0 auto;
+}
+
+.vocs_Navigation,
+.vocs_NavigationMenu_list {
+  align-items: center;
+}
+
+/***
+ *** `/demo` styles
+ ***/
+
+button,
+input {
+  cursor: default;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+@theme {
+  --animate-fade-pulse: fade-pulse 2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+
+  --animate-spin-slow: spin 3s linear infinite;
+
+  --animate-rotation: rotation 1.2s linear infinite;
+
+  --font-rk-sans:
+    SFRounded, ui-rounded, "SF Pro Rounded", -apple-system, "system-ui", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  @keyframes fade-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}

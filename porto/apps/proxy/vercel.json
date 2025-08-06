@@ -1,0 +1,88 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "destination": "/.well-known/m/apple-dev.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "dev.id.porto.sh"
+        }
+      ],
+      "source": "/.well-known/apple-developer-merchantid-domain-association.txt"
+    },
+    {
+      "destination": "/.well-known/m/apple-staging.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "stg.id.porto.sh"
+        }
+      ],
+      "source": "/.well-known/apple-developer-merchantid-domain-association.txt"
+    },
+    {
+      "destination": "/.well-known/m/apple-prod.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "id.porto.sh"
+        }
+      ],
+      "source": "/.well-known/apple-developer-merchantid-domain-association.txt"
+    },
+    {
+      "destination": "https://:env.dialog.porto.sh/dialog/",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<env>.*).id.porto.sh"
+        }
+      ],
+      "source": "/dialog/"
+    },
+    {
+      "destination": "https://:env.dialog.porto.sh/dialog/:match*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<env>.*).id.porto.sh"
+        }
+      ],
+      "source": "/dialog/:match*"
+    },
+    {
+      "destination": "https://:env.manage.porto.sh/",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<env>.*).id.porto.sh"
+        }
+      ],
+      "source": "/"
+    },
+    {
+      "destination": "https://:env.manage.porto.sh/:match*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<env>.*).id.porto.sh"
+        }
+      ],
+      "source": "/:match*"
+    },
+    {
+      "destination": "https://dialog.porto.sh/dialog/",
+      "source": "/dialog/"
+    },
+    {
+      "destination": "https://dialog.porto.sh/dialog/:match*",
+      "source": "/dialog/:match*"
+    },
+    { "destination": "https://manage.porto.sh/", "source": "/" },
+    {
+      "destination": "https://manage.porto.sh/:match*",
+      "source": "/:match*"
+    }
+  ]
+}

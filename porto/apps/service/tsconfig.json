@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "resolveJsonModule": true,
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "types": ["node", "@cloudflare/workers-types"]
+  },
+  "include": ["./src/**/*"],
+  "files": ["env.d.ts", "vite.config.ts", "wrangler.json", "package.json"],
+  "exclude": ["**/_/**", "dist", "node_modules"]
+}

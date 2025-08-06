@@ -1,0 +1,17 @@
+895e1fe943e967b0faab6a476f3b82b37d14300d		branch 'main' of https://github.com/zkemail/ether-email-auth
+3122a40f419ea7297525270669e334012beb20d0	not-for-merge	branch 'backup/email-auth-simplification' of https://github.com/zkemail/ether-email-auth
+9cc32e84315535d54e86030e99d6f91817976060	not-for-merge	branch 'chore/example-env' of https://github.com/zkemail/ether-email-auth
+9818be8aba34f44ea4629358f160505a6717fa83	not-for-merge	branch 'email-recovery' of https://github.com/zkemail/ether-email-auth
+ed91a1c275196c16c6922681009ae67496c0cc92	not-for-merge	branch 'exp/ci' of https://github.com/zkemail/ether-email-auth
+ba40e09f51e984bd371b68252bd42bd5636190cc	not-for-merge	branch 'feat/new-forced-subject' of https://github.com/zkemail/ether-email-auth
+dee988c6e3663cfe2cc166423fc0d90625d39c54	not-for-merge	branch 'feat/notification-service' of https://github.com/zkemail/ether-email-auth
+1c745739c2be6ac6d0a1a4c7e16ebde08a7f72e5	not-for-merge	branch 'feat/safe-notification-service' of https://github.com/zkemail/ether-email-auth
+44d118d66f9303581b03d8c2d048533207952b11	not-for-merge	branch 'feat/standalone-notification-service' of https://github.com/zkemail/ether-email-auth
+a262f2913415aa6bd2817ddd294c1d057061b09c	not-for-merge	branch 'feat/update-deployment-scripts' of https://github.com/zkemail/ether-email-auth
+3a1ed593e9c16614232c2eb85a03833b35b22839	not-for-merge	branch 'feat/use-salt-in-deployment-script' of https://github.com/zkemail/ether-email-auth
+05d3910fd14523c84d6ed0ec12e16624b66437d3	not-for-merge	branch 'phone-number' of https://github.com/zkemail/ether-email-auth
+a45d0fd8bd9591f70844931f63993fc3a4399687	not-for-merge	branch 'recovery/fix/outlook' of https://github.com/zkemail/ether-email-auth
+aac9ec0cff891e25a111cd46ad1ad65c5248c442	not-for-merge	branch 'recovery/more-domain-support' of https://github.com/zkemail/ether-email-auth
+68d03a4448cbc22ad51dd8a9c49a14577507f834	not-for-merge	branch 'zkfriendly/sol-119-circuits-contract-poseidon-hash-issue' of https://github.com/zkemail/ether-email-auth
+4876eee8798331f7419dc2b2051fb19eab171351	not-for-merge	branch 'zkfriendly/sol-133-build-and-setup-scripts-for-circuits' of https://github.com/zkemail/ether-email-auth
+6199405050d957f224264f65f74c3109c7ca97f1	not-for-merge	branch 'zkfriendly/sol-45-support-for-outlookcom-in-email-recovery' of https://github.com/zkemail/ether-email-auth

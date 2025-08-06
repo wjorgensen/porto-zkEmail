@@ -1,0 +1,78 @@
+import { TryItOut } from '../../../components/TryItOut'
+
+# `wallet_getCapabilities`
+
+Gets supported [capabilities](/sdk/rpc/capabilities) of Porto.
+
+<TryItOut
+  exampleSlug="#example"
+  fn={({ provider }) => provider.request({ method: 'wallet_getCapabilities' })}
+  requireConnection={false}
+  transformResultCode={(code) => {
+    return 'const capabilities = ' + code
+  }}
+/>
+
+## Request
+
+```ts
+type Request = {
+  method: 'wallet_getCapabilities',
+  params: [
+    /** Account address to get the capabilities for. */
+    account?: `0x${string}`
+    /** Chain IDs to get the capabilities for. */
+    chainIds?: `0x${string}`[],
+  ]
+}
+```
+
+## Response
+
+[See list of Capabilities](/sdk/rpc/capabilities)
+
+```ts
+type Response = {
+  capabilities: {
+    atomic: {
+      status: "supported" | "unsupported"
+    }
+    feeToken: {
+      supported: true,
+      tokens: {
+        address: `0x${string}`,
+        decimals: number,
+        kind: string,
+        nativeRate: `0x${string}`,
+        symbol: string,
+      }[]
+    },
+    merchant: {
+      supported: true
+    }
+    permissions: {
+      supported: true
+    },
+  }
+}
+```
+
+## Example
+
+```ts twoslash
+import { Porto } from 'porto'
+
+const { provider } = Porto.create()
+
+const capabilities = await provider.request({ // [!code focus]
+  method: 'wallet_getCapabilities', // [!code focus]
+}) // [!code focus]
+```
+
+<TryItOut
+  fn={({ provider }) => provider.request({ method: 'wallet_getCapabilities' })}
+  requireConnection={false}
+  transformResultCode={(code) => {
+    return 'const capabilities = ' + code
+  }}
+/>

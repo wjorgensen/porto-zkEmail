@@ -1,0 +1,81 @@
+name: Bug Report (Developer)
+description: Report bugs or issues with the `porto` developer library.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! The more info you provide, the more we can help you.
+
+  - type: checkboxes
+    attributes:
+      label: Check existing issues
+      description: By submitting this issue, you checked there isn't [already an issue](https://github.com/ithacaxyz/porto/issues) for this bug.
+      options:
+        - label: I checked there isn't [already an issue](https://github.com/ithacaxyz/porto/issues) for the bug I encountered.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: Clear and concise description of the bug. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      placeholder: I am doing… What I expect is… What is actually happening…
+    validations:
+      required: true
+
+  - type: input
+    id: reproduction
+    attributes:
+      label: Link to Minimal Reproducible Example
+      description: "Please provide a link to a public GitHub Repository or [StackBlitz](https://vite.new) for runtime issues or [TypeScript Playground](https://www.typescriptlang.org/play) for type issues. For most issues, you will likely get asked to provide a minimal reproducible example so why not add one now :) If a report is vague (e.g. just snippets, generic error message, screenshot, etc.) and has no reproduction, it will receive a \"Needs Reproduction\" label and be auto-closed."
+      placeholder: https://github.com/user/repo
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Steps or code snippets to reproduce the behavior.
+    validations:
+      required: false
+
+  - type: input
+    attributes:
+      label: Porto Version
+      description: What version of Porto are you using?
+      placeholder: x.y.z (do not write `latest`)
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Viem Version
+      description: What version of [Viem](https://viem.sh) are you using?
+      placeholder: x.y.z (do not write `latest`)
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Wagmi Version
+      description: What version of [Wagmi](https://wagmi.sh) are you using? If using multiple, separate with comma (e.g. `wagmi@x.y.z, @wagmi/core@x.y.z`).
+      placeholder: x.y.z (do not write `latest`)
+    validations:
+      required: false
+
+  - type: input
+    attributes:
+      label: TypeScript Version
+      description: What version of TypeScript are you using? Porto requires `typescript@>=5.4`.
+      placeholder: x.y.z (do not write `latest`)
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: Anything that will give us more context about the issue you are encountering. Browser, OS, passkey/password manager, etc.
+    validations:
+      required: false
+
+
+

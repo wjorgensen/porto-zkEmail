@@ -1,0 +1,27 @@
+[submodule "contracts/account"]
+	path = contracts/account
+	url = https://github.com/ithacaxyz/account.git
+[submodule "contracts/demo/lib/forge-std"]
+	path = contracts/demo/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std.git
+[submodule "contracts/demo/lib/solady"]
+	path = contracts/demo/lib/solady
+	url = https://github.com/Vectorized/solady.git
+[submodule "lib/zk-email-verify"]
+	path = lib/zk-email-verify
+	url = https://github.com/zkemail/zk-email-verify
+[submodule "lib/ether-email-auth"]
+	path = lib/ether-email-auth
+	url = https://github.com/zkemail/ether-email-auth
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/vectorized/solady
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/accountV2/lib/solady"]
+	path = contracts/accountV2/lib/solady
+	url = https://github.com/vectorized/solady
+[submodule "contracts/accountV2/lib/forge-std"]
+	path = contracts/accountV2/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
