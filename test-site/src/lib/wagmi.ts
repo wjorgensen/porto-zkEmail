@@ -1,13 +1,12 @@
 import { createConfig, http } from 'wagmi';
-import { createClient } from 'viem';
 import { ANVIL_CHAIN } from './contracts';
 import { portoConnector } from './porto';
-import { anvilV2 } from '../../porto/src/core/ChainsV2';
 
 export const wagmiConfig = createConfig({
-  chains: [anvilV2],
+  chains: [ANVIL_CHAIN],
   connectors: [portoConnector],
   transports: {
-    [anvilV2.id]: http('http://localhost:8545')
-  }
+    [ANVIL_CHAIN.id]: http('http://localhost:8545')
+  },
+  ssr: true // Enable SSR mode to prevent auto-reconnect issues
 });

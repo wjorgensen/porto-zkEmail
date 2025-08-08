@@ -15,6 +15,12 @@ export function PasskeyManager({ accountAddress }: PasskeyManagerProps) {
   const { passkeys, loading, error } = useOnChainPasskeys(targetAddress);
   const [revoking, setRevoking] = useState<string | null>(null);
 
+  // Debug logging
+  console.log('PasskeyManager - targetAddress:', targetAddress);
+  console.log('PasskeyManager - passkeys:', passkeys);
+  console.log('PasskeyManager - loading:', loading);
+  console.log('PasskeyManager - error:', error);
+
   const handleRevoke = async (keyHash: string) => {
     if (!walletClient) {
       alert('Please connect your wallet first');
@@ -104,8 +110,13 @@ export function PasskeyManager({ accountAddress }: PasskeyManagerProps) {
                     Key Hash: {passkey.keyHash.slice(0, 10)}...
                   </p>
                   <p className="text-sm text-gray-500">
-                    Type: {passkey.key.kty} / {passkey.key.alg}
+                    Type: WebAuthn P256
                   </p>
+                  {passkey.key.isSuperAdmin && (
+                    <p className="text-sm text-green-600 font-medium">
+                      Super Admin
+                    </p>
+                  )}
                   {passkey.key.expiry && passkey.key.expiry > 0n && (
                     <p className="text-sm text-gray-500">
                       Expires: {new Date(Number(passkey.key.expiry) * 1000).toLocaleDateString()}

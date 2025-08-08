@@ -92,7 +92,7 @@ fi
 echo -e "  ${BLUE}→ Starting Anvil local blockchain...${NC}"
 tmux rename-window -t "$SESSION_NAME:0" "anvil"
 tmux send-keys -t "$SESSION_NAME:anvil" "echo '═══ Starting Anvil Blockchain ═══'" C-m
-tmux send-keys -t "$SESSION_NAME:anvil" "anvil --accounts 10 --balance 10000 --chain-id 31337 --port 8545" C-m
+tmux send-keys -t "$SESSION_NAME:anvil" "anvil --accounts 10 --balance 10000 --chain-id 31337 --port 8545 --hardfork prague" C-m
 echo -e "  ${GREEN}✓ Anvil blockchain started${NC}"
 
 # Window 2: Email Server

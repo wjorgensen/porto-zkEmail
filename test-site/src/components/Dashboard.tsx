@@ -3,21 +3,17 @@
 import { useState, useEffect } from 'react';
 import { createPublicClient, createWalletClient, http, parseEther, formatEther, custom } from 'viem';
 import { CONTRACTS, ANVIL_CHAIN } from '@/lib/contracts';
-import TestTokenABI from '@/lib/TestToken.abi.json';
 import { PasskeyManager } from './PasskeyManager';
+import IthacaAccountV2ABI from '@/lib/IthacaAccountV2.abi.json';
 
 interface DashboardProps {
   accountAddress: string;
 }
 
 export function Dashboard({ accountAddress }: DashboardProps) {
-  const [balance, setBalance] = useState('0');
   const [ethBalance, setEthBalance] = useState('0');
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [transferAmount, setTransferAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [accountInfo, setAccountInfo] = useState<any>(null);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [emailHash, setEmailHash] = useState<string>('');
 
   // Create public client
   const publicClient = createPublicClient({
@@ -25,110 +21,46 @@ export function Dashboard({ accountAddress }: DashboardProps) {
     transport: http()
   });
 
-  // Load account info
+  // Load account info from chain
   useEffect(() => {
-    const stored = localStorage.getItem('porto_account');
-    if (stored) {
-      setAccountInfo(JSON.parse(stored));
-    }
-    const email = localStorage.getItem('userEmail');
-    if (email) {
-      setUserEmail(email);
-    }
-    fetchBalances();
-  }, []);
-
-  // Fetch token and ETH balances
-  const fetchBalances = async () => {
+    fetchAccountData();
+    fetchEthBalance();
+  }, [accountAddress]);
+  
+  // Fetch account data from chain
+  const fetchAccountData = async () => {
     try {
-      // Fetch PTT balance
-      const tokenBalance = await publicClient.readContract({
-        address: CONTRACTS.testToken as `0x${string}`,
-        abi: TestTokenABI,
-        functionName: 'balanceOf',
-        args: [accountAddress as `0x${string}`],
-      });
+      // Check if account has email registered
+      const hash = await publicClient.readContract({
+        address: accountAddress as `0x${string}`,
+        abi: IthacaAccountV2ABI,
+        functionName: 'getEmailHash',
+      }) as string;
       
-      setBalance(formatEther(tokenBalance as bigint));
+      if (hash && hash !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        setEmailHash(hash);
+      }
+    } catch (error) {
+      console.log('Could not fetch email hash:', error);
+    }
+  };
 
-      // Fetch ETH balance
+  // Fetch ETH balance
+  const fetchEthBalance = async () => {
+    try {
       const ethBal = await publicClient.getBalance({
         address: accountAddress as `0x${string}`
       });
       setEthBalance(formatEther(ethBal));
     } catch (error) {
-      console.error('Failed to fetch balances:', error);
+      console.error('Failed to fetch balance:', error);
     }
   };
 
-  // Mint test tokens (via Orchestrator - gas sponsored)
-  const mintTokens = async () => {
-    setIsLoading(true);
-    try {
-      // In production, this would:
-      // 1. Create a UserOp for minting
-      // 2. Sign with passkey
-      // 3. Submit via Orchestrator (gas sponsored)
-      
-      // For demo, we'll simulate the mint
-      alert('In production, this would mint tokens via gas-sponsored transaction signed with your passkey');
-      
-      // Simulate mint by using a funded account
-      const testPrivateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-      const { privateKeyToAccount } = await import('viem/accounts');
-      const fundedAccount = privateKeyToAccount(testPrivateKey);
-      
-      const walletClient = createWalletClient({
-        account: fundedAccount,
-        chain: ANVIL_CHAIN,
-        transport: http()
-      });
-
-      const hash = await walletClient.writeContract({
-        address: CONTRACTS.testToken as `0x${string}`,
-        abi: TestTokenABI,
-        functionName: 'mint',
-        args: [accountAddress as `0x${string}`, parseEther('100')],
-      });
-      
-      console.log('Mint transaction:', hash);
-      await publicClient.waitForTransactionReceipt({ hash });
-      
-      await fetchBalances();
-      alert('Successfully minted 100 PTT tokens!');
-    } catch (error) {
-      console.error('Failed to mint tokens:', error);
-      alert('Failed to mint tokens. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Transfer tokens (would use passkey signing in production)
-  const transferTokens = async () => {
-    if (!recipientAddress || !transferAmount) return;
-    
-    setIsLoading(true);
-    try {
-      alert(`In production, this would:
-1. Create UserOp for transfer
-2. Sign with your passkey (biometric)
-3. Submit via Orchestrator (gas sponsored)
-4. No private key needed!`);
-      
-      setRecipientAddress('');
-      setTransferAmount('');
-    } catch (error) {
-      console.error('Failed to transfer tokens:', error);
-      alert('Failed to transfer tokens. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Logout
   const logout = () => {
-    localStorage.removeItem('porto_account');
+    // Just reload the page to reset state
     window.location.reload();
   };
 
@@ -152,72 +84,45 @@ export function Dashboard({ accountAddress }: DashboardProps) {
               <span className="font-semibold">Address:</span>{' '}
               <span className="font-mono text-sm">{accountAddress}</span>
             </p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Email:</span>{' '}
-              {accountInfo?.email || 'Loading...'}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Passkey ID:</span>{' '}
-              <span className="font-mono text-xs">
-                {accountInfo?.passkeyId?.slice(0, 16)}...
-              </span>
-            </p>
+            {emailHash && (
+              <p className="text-gray-600">
+                <span className="font-semibold">Email Hash:</span>{' '}
+                <span className="font-mono text-xs">
+                  {emailHash.slice(0, 10)}...
+                </span>
+              </p>
+            )}
             <div className="pt-4 border-t">
               <p className="text-gray-600">
                 <span className="font-semibold">ETH Balance:</span>{' '}
                 <span className="font-bold text-xl">{ethBalance}</span>
               </p>
-              <p className="text-gray-600">
-                <span className="font-semibold">PTT Balance:</span>{' '}
-                <span className="font-bold text-xl text-green-600">{balance}</span>
-              </p>
             </div>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-1 gap-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Mint Test Tokens</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Account Actions</h3>
             <p className="text-gray-600 text-sm mb-4">
-              Get 100 PTT tokens (gas sponsored)
+              Transaction features coming soon. All transactions will be signed with your passkey.
             </p>
-            <button
-              onClick={mintTokens}
-              disabled={isLoading}
-              className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-gray-400 text-white font-medium py-2.5 px-6 rounded-lg transition-colors"
-            >
-              {isLoading ? 'Minting...' : 'Mint 100 PTT'}
-            </button>
-            <p className="text-xs text-gray-500 mt-2">
-              Uses Orchestrator for gas sponsorship
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Transfer Tokens</h3>
-            <input
-              type="text"
-              placeholder="Recipient address (0x...)"
-              value={recipientAddress}
-              onChange={(e) => setRecipientAddress(e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg mb-3 text-sm focus:outline-none focus:border-sky-500"
-            />
-            <input
-              type="number"
-              placeholder="Amount"
-              value={transferAmount}
-              onChange={(e) => setTransferAmount(e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg mb-4 text-sm focus:outline-none focus:border-sky-500"
-            />
-            <button
-              onClick={transferTokens}
-              disabled={isLoading || !recipientAddress || !transferAmount}
-              className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-gray-400 text-white font-medium py-2.5 px-6 rounded-lg transition-colors"
-            >
-              {isLoading ? 'Transferring...' : 'Transfer'}
-            </button>
-            <p className="text-xs text-gray-500 mt-2">
-              Signs with passkey, no private key
+            <div className="space-y-3">
+              <button
+                disabled
+                className="w-full bg-gray-200 text-gray-500 font-medium py-2.5 px-6 rounded-lg cursor-not-allowed"
+              >
+                Send ETH (Coming Soon)
+              </button>
+              <button
+                disabled
+                className="w-full bg-gray-200 text-gray-500 font-medium py-2.5 px-6 rounded-lg cursor-not-allowed"
+              >
+                Execute Transaction (Coming Soon)
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">
+              All actions will be signed with your passkey - no private key needed
             </p>
           </div>
         </div>
@@ -268,15 +173,15 @@ export function Dashboard({ accountAddress }: DashboardProps) {
             <ul className="text-gray-700 text-sm space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>
-                <span>Email verification uses mock proofs</span>
+                <span>Email verification uses real ZK proofs (Groth16)</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>
-                <span>Passkey creation is simulated</span>
+                <span>Passkeys use real WebAuthn API (Touch ID/Face ID)</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>
-                <span>Token operations use funded account</span>
+                <span>Running on local Anvil testnet</span>
               </li>
             </ul>
           </div>

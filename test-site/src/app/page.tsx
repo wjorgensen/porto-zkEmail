@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PortoSignupFlow } from '@/components/PortoSignupFlow';
+import { LoginFlow } from '@/components/LoginFlow';
 import { Dashboard } from '@/components/Dashboard';
 import { Header } from '@/components/Header';
 
@@ -9,12 +10,14 @@ export default function Home() {
   const [portoAccount, setPortoAccount] = useState<string | null>(null);
   const [flow, setFlow] = useState<'signup' | 'login' | null>(null);
 
-  // Check for existing Porto account
+  // Check for existing Porto account - but don't auto-login
   useEffect(() => {
+    // We'll still check if account exists to show appropriate UI
+    // but won't automatically log them in
     const stored = localStorage.getItem('porto_account');
     if (stored) {
-      const account = JSON.parse(stored);
-      setPortoAccount(account.address);
+      // Account exists but user needs to explicitly login
+      console.log('Porto account found, user can login');
     }
   }, []);
 
@@ -74,10 +77,16 @@ export default function Home() {
                   
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
-                      onClick={() => setFlow('signup')}
+                      onClick={() => setFlow('login')}
                       className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-8 rounded-lg transition-colors"
                     >
-                      Sign in
+                      Login
+                    </button>
+                    <button
+                      onClick={() => setFlow('signup')}
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-8 rounded-lg transition-colors"
+                    >
+                      Sign Up
                     </button>
                   </div>
                 </div>
@@ -138,6 +147,16 @@ export default function Home() {
                 {flow === 'signup' && (
                   <PortoSignupFlow
                     onComplete={(account) => setPortoAccount(account)}
+                  />
+                )}
+                
+                {flow === 'login' && (
+                  <LoginFlow
+                    onComplete={(address) => {
+                      // Account address comes from the login flow
+                      setPortoAccount(address);
+                    }}
+                    onBack={() => setFlow(null)}
                   />
                 )}
                 

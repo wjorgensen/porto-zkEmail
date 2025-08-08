@@ -1,12 +1,11 @@
 import type * as Address from 'ox/Address'
-import { createConnector } from 'wagmi'
+import { createConnector } from '@wagmi/core'
 import { getAddress } from 'viem'
-import * as Account from '../viem/Account.js'
-import * as Key from '../viem/Key.js'
 import type * as Porto from '../core/Porto.js'
 import { anvilV2 } from '../core/ChainsV2.js'
-import * as ContractActions from '../viem/ContractActions.js'
-import IthacaAccountV2ABI from '../../contracts/accountV2/src/IthacaAccountV2.abi.json' assert { type: 'json' }
+
+// Use require for JSON import to avoid assertion issues
+const IthacaAccountV2ABI = require('../../contracts/accountV2/src/IthacaAccountV2.abi.json')
 
 export type ConnectorV2Parameters = {
   porto?: Porto.Porto
@@ -118,12 +117,12 @@ export function PortoConnectorV2(parameters: ConnectorV2Parameters = {}) {
     async registerEmailAndPasskey({
       email,
       emailProof,
-      passkey,
+      keyData,
       keyId,
     }: {
       email: string
       emailProof: string
-      passkey: Key.Key
+      keyData: any // Passkey data structure
       keyId: string
     }) {
       if (!accountAddress) throw new Error('Account not connected')
@@ -135,7 +134,7 @@ export function PortoConnectorV2(parameters: ConnectorV2Parameters = {}) {
         address: accountAddress,
         abi: IthacaAccountV2ABI,
         functionName: 'setEmailAndRegister',
-        args: [emailProof, email, passkey, keyId],
+        args: [emailProof, email, keyData, keyId],
       })
       
       return hash
