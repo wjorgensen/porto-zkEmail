@@ -20,7 +20,6 @@ The project integrates **Porto's account abstraction framework** with **zkEmail 
 - 🧬 **Smart Accounts**: EIP-7702 compatible accounts with custom validation logic
 - ⚡ **Fast Onboarding**: Create accounts in seconds using just email + biometrics
 - 🛡️ **Recovery System**: Recover accounts using email verification if device is lost
-- 🔗 **On-Chain Storage**: All account data stored on blockchain (no localStorage)
 
 ## 🏗️ Architecture
 
@@ -52,7 +51,7 @@ Before running the project locally, ensure you have:
 
 - **Node.js 18+** and **npm**
 - **Git**
-- **Gmail account** with App Password enabled
+- **Gmail account** with App Password and 2 factor authentication enabled
 - **Foundry** for smart contract compilation
 - **A modern browser** with WebAuthn support
 
