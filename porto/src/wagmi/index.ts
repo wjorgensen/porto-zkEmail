@@ -1,4 +1,5 @@
 export * as Actions from './Actions.js'
 export { porto, unstable_porto } from './Connector.js'
+export { PortoConnectorV2 } from './ConnectorV2.js'
 export * as Hooks from './Hooks.js'
 export * as Query from './Query.js'

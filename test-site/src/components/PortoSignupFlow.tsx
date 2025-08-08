@@ -230,7 +230,7 @@ export function PortoSignupFlow({ onComplete }: { onComplete: (account: string) 
       const response = await fetch(`http://localhost:3001/verification-status/${nonce}`);
       const data = await response.json();
       
-      if (data.status === 'completed' && data.proof) {
+      if (data.status === 'verified' && data.zkProof) {
         // Email verified, proceed to passkey creation
         setState(prev => ({ ...prev, step: 'passkey' }));
       }
@@ -255,11 +255,13 @@ export function PortoSignupFlow({ onComplete }: { onComplete: (account: string) 
     <div className="max-w-md mx-auto">
       {/* Email Input */}
       {state.step === 'email' && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Create Porto Account</h2>
-          <p className="text-gray-600">
-            No MetaMask needed! Porto generates a new wallet and secures it with your email and passkey.
-          </p>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold mb-2 text-gray-900">Create your zkEmail account</h2>
+            <p className="text-gray-600">
+              Enter your email to get started
+            </p>
+          </div>
           
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -270,91 +272,144 @@ export function PortoSignupFlow({ onComplete }: { onComplete: (account: string) 
               name="email"
               type="email"
               placeholder="your@email.com"
-              className="w-full p-3 border rounded-lg"
+              className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-sky-500"
               required
             />
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50"
+              className="mt-4 w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-6 rounded-lg disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Sending...' : 'Send Verification Email'}
+              {loading ? 'Sending...' : 'Continue with email'}
             </button>
           </form>
+          
+          <p className="text-xs text-gray-500 text-center mt-6">
+            No passwords or extensions required
+          </p>
         </div>
       )}
 
       {/* Email Verification */}
       {state.step === 'verify' && (
-        <div className="space-y-4 text-center">
-          <h2 className="text-2xl font-bold">Check Your Email</h2>
-          <p className="text-gray-600">
-            We sent a verification email to {state.email}
-          </p>
-          <p className="text-sm text-gray-500">
-            Reply to the email to verify your address
-          </p>
-          <div className="py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-2 text-gray-900">Check your email</h2>
+            <p className="text-gray-600 mb-2">
+              We sent a verification to
+            </p>
+            <p className="font-medium text-gray-900 mb-6">
+              {state.email}
+            </p>
+            <div className="py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
+            </div>
+            <p className="text-sm text-gray-500">
+              Reply to the email to verify your address
+            </p>
           </div>
-          <p className="text-xs text-gray-400">
-            Checking for verification...
-          </p>
         </div>
       )}
 
       {/* Passkey Creation */}
       {state.step === 'passkey' && (
-        <div className="space-y-4 text-center">
-          <h2 className="text-2xl font-bold">Create Your Passkey</h2>
-          <p className="text-gray-600">
-            This passkey will be the only way to access your account
-          </p>
-          <button
-            onClick={createPasskey}
-            disabled={loading}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Passkey'}
-          </button>
-          <p className="text-xs text-gray-500">
-            Uses your device's biometric authentication
-          </p>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-2 text-gray-900">Secure your account</h2>
+            <p className="text-gray-600 mb-6">
+              Create a passkey for secure, passwordless access
+            </p>
+            <button
+              onClick={createPasskey}
+              disabled={loading}
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-6 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Creating...' : 'Create passkey'}
+            </button>
+            <p className="text-xs text-gray-500 mt-4">
+              Uses your device's biometric authentication
+            </p>
+          </div>
         </div>
       )}
 
       {/* Account Deployment */}
       {state.step === 'deploying' && (
-        <div className="space-y-4 text-center">
-          <h2 className="text-2xl font-bold">Deploying Your Account</h2>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>✓ Email verified</p>
-            <p>✓ Passkey created</p>
-            <p className="animate-pulse">⏳ Deploying EIP-7702 smart account...</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-orange-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900">Setting up your zkEmail account</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-center gap-2 text-green-600">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Email verified</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-green-600">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Passkey created</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-gray-600">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sky-500"></div>
+                <span>Deploying smart account...</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-6">
+              Gas sponsored • EIP-7702 account
+            </p>
           </div>
-          <div className="py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          </div>
-          <p className="text-xs text-gray-500">
-            Gas sponsored by Orchestrator (ERC-4337)
-          </p>
         </div>
       )}
 
       {/* Complete */}
       {state.step === 'complete' && (
-        <div className="space-y-4 text-center">
-          <h2 className="text-2xl font-bold">🎉 Account Created!</h2>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Your Porto Account:</p>
-            <p className="font-mono text-xs">{state.accountAddress}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-2 text-gray-900">zkEmail account created!</h2>
+            <p className="text-gray-600 mb-6">
+              Your Porto account is ready to use
+            </p>
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <p className="text-xs text-gray-500 mb-1">Account address</p>
+              <p className="font-mono text-sm break-all">{state.accountAddress}</p>
+            </div>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p className="flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                No seed phrase to remember
+              </p>
+              <p className="flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Secured by email + passkey
+              </p>
+            </div>
           </div>
-          <p className="text-green-600 font-semibold">
-            ✓ No seed phrase needed
-          </p>
-          <p className="text-sm text-gray-600">
-            Your account is secured by your email and passkey. The private key has been discarded.
-          </p>
         </div>
       )}
 

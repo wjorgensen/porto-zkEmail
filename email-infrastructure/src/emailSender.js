@@ -25,19 +25,24 @@ export class EmailSender {
     });
   }
   
-  async sendVerificationEmail({ to, code, challengeBody }) {
+  async sendVerificationEmail({ to, code, action = 'setEmail' }) {
     const subject = `PORTO-AUTH-${code}`;
+    
+    // Format the action string to match the blueprint regex
+    const actionString = `PORTO | ${action} |`;
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Porto Account Verification</h2>
         <p>Your verification code is: <strong>${code}</strong></p>
-        <p>To complete your registration, please reply to this email.</p>
-        <p style="margin-top: 30px; padding: 15px; background-color: #f5f5f5; border-radius: 5px; font-family: monospace; word-break: break-all;">
-          ${challengeBody}
-        </p>
+        <p>To complete your ${action} request, please <strong>reply to this email</strong>.</p>
+        <div style="margin-top: 30px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+          <p style="margin: 0; font-family: monospace;">
+            ${actionString}
+          </p>
+        </div>
         <p style="color: #666; font-size: 12px; margin-top: 30px;">
-          This is an automated message. Please reply to verify your account.
+          This is an automated message from Porto. Reply to verify your action.
         </p>
       </div>
     `;
@@ -47,11 +52,11 @@ Porto Account Verification
 
 Your verification code is: ${code}
 
-To complete your registration, please reply to this email.
+To complete your ${action} request, please reply to this email.
 
-${challengeBody}
+${actionString}
 
-This is an automated message. Please reply to verify your account.
+This is an automated message from Porto. Reply to verify your action.
     `;
     
     try {
@@ -63,7 +68,7 @@ This is an automated message. Please reply to verify your account.
         html,
         headers: {
           'X-Porto-Auth': code,
-          'X-Porto-Nonce': challengeBody.split('|')[5]
+          'X-Porto-Action': action
         }
       });
       

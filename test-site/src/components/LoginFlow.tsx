@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useConnect } from 'wagmi';
+import { portoConnector } from '@/lib/porto';
 
 interface LoginFlowProps {
   onComplete: () => void;
@@ -8,84 +10,100 @@ interface LoginFlowProps {
 }
 
 export function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
-
-  // Mock device discovery
-  const discoverDevices = () => {
-    // In production, this would check for existing passkeys
-    const mockDevices = [
-      { id: 'device-1', name: 'MacBook Pro', lastUsed: '2 hours ago' },
-      { id: 'device-2', name: 'iPhone 15', lastUsed: 'Yesterday' },
-    ];
-    
-    return mockDevices;
-  };
-
-  const devices = discoverDevices();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { connect, connectors } = useConnect();
 
   const handleLogin = async () => {
-    if (!selectedDevice) {
-      alert('Please select a device');
-      return;
-    }
-
-    // Mock login process
-    console.log('Logging in with device:', selectedDevice);
+    setLoading(true);
+    setError(null);
     
-    // Simulate authentication
-    setTimeout(() => {
-      onComplete();
-    }, 1000);
+    try {
+      // Connect using Porto connector
+      // This will trigger the Porto dialog for passkey authentication
+      const connector = connectors.find(c => c.id === 'porto');
+      
+      if (!connector) {
+        throw new Error('Porto connector not found');
+      }
+
+      await connect(
+        { connector },
+        {
+          onSuccess: () => {
+            console.log('Successfully connected with Porto');
+            onComplete();
+          },
+          onError: (error) => {
+            console.error('Failed to connect:', error);
+            setError(error.message);
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto">
       <h2 className="text-2xl font-bold mb-4">Welcome Back!</h2>
-      <p className="mb-6 text-gray-600">
-        Select a device to log in
-      </p>
-
-      <div className="space-y-3 mb-6">
-        {devices.map((device) => (
-          <button
-            key={device.id}
-            onClick={() => setSelectedDevice(device.id)}
-            className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
-              selectedDevice === device.id
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-          >
-            <div className="font-semibold">{device.name}</div>
-            <div className="text-sm text-gray-500">Last used: {device.lastUsed}</div>
-          </button>
-        ))}
+      
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p className="text-sm text-blue-800">
+          Click below to authenticate with your passkey. Your browser will prompt you to use your biometric authentication or security key.
+        </p>
       </div>
 
-      {devices.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No devices found. Please sign up first.
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
       <button
         onClick={handleLogin}
-        disabled={!selectedDevice}
+        disabled={loading}
         className={`w-full py-3 px-6 rounded-lg font-bold transition-colors ${
-          selectedDevice
-            ? 'bg-blue-500 hover:bg-blue-600 text-white'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          loading
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-blue-500 hover:bg-blue-600 text-white'
         }`}
       >
-        Log In
+        {loading ? (
+          <>
+            <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+            Authenticating...
+          </>
+        ) : (
+          'Login with Passkey'
+        )}
       </button>
 
-      <button
-        onClick={onBack}
-        className="mt-4 text-gray-500 hover:text-gray-600 text-sm underline block mx-auto"
-      >
-        Back
-      </button>
+      <div className="mt-6 text-center">
+        <p className="text-gray-600 text-sm mb-2">
+          Don't have an account yet?
+        </p>
+        <button
+          onClick={onBack}
+          className="text-blue-500 hover:text-blue-600 font-medium"
+        >
+          Sign up instead
+        </button>
+      </div>
+
+      <div className="mt-8 pt-6 border-t">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">How it works:</h3>
+        <ul className="text-xs text-gray-600 space-y-1">
+          <li>• Your passkey is stored on-chain in your account contract</li>
+          <li>• Authentication happens via WebAuthn (biometrics/security key)</li>
+          <li>• No passwords or private keys are ever stored</li>
+          <li>• All transactions are signed with your passkey</li>
+        </ul>
+      </div>
     </div>
   );
 }

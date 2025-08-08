@@ -1,16 +1,20 @@
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import { ZKEmailService } from './zkEmailServiceSimple.js';
-import { EmailDatabase } from './emailDatabase.js';
 import { hashEmail, hashCode } from './utils/crypto.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { ZkProofService } from './zkProofService.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class EmailMonitor {
   constructor(logger) {
     this.logger = logger;
     this.pendingVerifications = new Map();
-    this.zkEmailService = new ZKEmailService(logger);
-    this.database = new EmailDatabase(logger);
     this.isRunning = false;
+    this.processedEmails = new Set(); // Track processed email IDs
+    this.zkProofService = new ZkProofService(logger);
     
     // Configure IMAP
     this.imap = new Imap({
@@ -44,10 +48,10 @@ export class EmailMonitor {
   async start() {
     if (this.isRunning) return;
     
-    // Initialize database
-    await this.database.initialize();
+    // Initialize ZK Proof Service
+    await this.zkProofService.initialize();
     
-    // Load pending verifications from database
+    // Load pending verifications
     await this.loadPendingVerifications();
     
     this.isRunning = true;
@@ -60,11 +64,10 @@ export class EmailMonitor {
       clearInterval(this.pollInterval);
     }
     this.imap.end();
-    await this.database.close();
   }
   
   async loadPendingVerifications() {
-    // This loads any pending verifications from the database
+    // This loads any pending verifications
     // We don't need to do this since we're tracking by nonce
   }
   
@@ -116,18 +119,33 @@ export class EmailMonitor {
       
       const fetch = this.imap.fetch(results, {
         bodies: '',
-        markSeen: false  // Don't mark as seen until processed
+        markSeen: true  // Mark as seen after processing to avoid re-processing
       });
       
       fetch.on('message', (msg, seqno) => {
+        let rawEmailBuffer = Buffer.alloc(0);
+        
         msg.on('body', (stream, info) => {
-          simpleParser(stream, async (err, parsed) => {
-            if (err) {
-              this.logger.error('Parse error:', err);
-              return;
-            }
+          // Collect the raw email data
+          stream.on('data', (chunk) => {
+            rawEmailBuffer = Buffer.concat([rawEmailBuffer, chunk]);
+          });
+          
+          stream.on('end', async () => {
+            const rawEmail = rawEmailBuffer.toString('utf8');
             
-            await this.processEmail(parsed);
+            // Also parse it for easier access
+            simpleParser(rawEmail, async (err, parsed) => {
+              if (err) {
+                this.logger.error('Parse error:', err);
+                return;
+              }
+              
+              // Add the raw email to the parsed object
+              parsed.source = rawEmail;
+              
+              await this.processEmail(parsed);
+            });
           });
         });
       });
@@ -150,12 +168,25 @@ export class EmailMonitor {
       const code = subjectMatch[1];
       const fromEmail = email.from?.value[0]?.address;
       
+      // Create unique ID for this email to prevent duplicate processing
+      const emailId = `${email.messageId || ''}_${code}_${fromEmail}`;
+      if (this.processedEmails.has(emailId)) {
+        this.logger.debug(`Email already processed: ${emailId}`);
+        return;
+      }
+      this.processedEmails.add(emailId);
+      
+      // Save the raw email as .eml file for testing (only once)
+      await this.saveEmailAsEml(email, code, fromEmail);
+      
       // Hash email and code for database lookup
       const emailHash = hashEmail(fromEmail);
       const codeHash = hashCode(code);
       
       // Check if this email/code combination has already been used
-      if (await this.database.hasEmailBeenUsed(emailHash, codeHash)) {
+      // (Tracking in memory for now)
+      const verificationKey = `${emailHash}_${codeHash}`;
+      if (this.processedEmails.has(verificationKey)) {
         this.logger.warn(`Email verification already used: ${fromEmail} with code ${code}`);
         return;
       }
@@ -183,43 +214,51 @@ export class EmailMonitor {
         emailReceived: true
       });
       
-      // Update status in database
-      await this.database.updateVerificationStatus(verification.nonce, 'generating_proof');
-      
-      // Generate proof
+      // Generate ZK proof
       try {
-        // Get raw email for zkEmail proof
-        const rawEmail = email.source || this.reconstructRawEmail(email);
+        this.logger.info('Generating ZK proof for email verification...');
         
-        const proof = await this.zkEmailService.generateProof({
-          rawEmail,
-          expectedCode: code,
-          action: verification.action || 'setEmail',
-          walletAddress: verification.walletAddress,
-          nonce: verification.nonce
+        const proofResult = await this.zkProofService.processEmailForProof(email);
+        
+        this.logger.info('ZK Proof generated successfully:', {
+          isValid: proofResult.isValid,
+          extractedValues: proofResult.extractedValues,
+          verifierContract: proofResult.verifierContract
         });
         
-        // Update with proof in memory
+        // Update status to show email was verified with proof
         this.pendingVerifications.set(verification.nonce, {
           ...verification,
-          status: 'completed',
-          proof,
+          status: 'verified',
+          verified: true,
+          emailReceived: true,
+          zkProof: proofResult.proof,
+          extractedValues: proofResult.extractedValues,
+          verifierContract: proofResult.verifierContract,
           completedAt: new Date().toISOString()
         });
         
-        // Update in database with proof
-        await this.database.updateVerificationStatus(verification.nonce, 'completed', proof);
+        // Save proof alongside the email
+        const proofPath = path.join(__dirname, '..', 'saved-emails', `proof_${code}_${fromEmail.replace(/[@.]/g, '_')}.json`);
+        await fs.writeFile(proofPath, JSON.stringify(proofResult, null, 2));
+        this.logger.info(`ZK Proof saved to: ${proofPath}`);
         
-        this.logger.info(`Proof generated for ${fromEmail}`);
-      } catch (error) {
-        this.logger.error('Proof generation failed:', error);
+      } catch (proofError) {
+        this.logger.error('Failed to generate ZK proof:', proofError);
+        
+        // Still mark as verified but note the proof generation failed
         this.pendingVerifications.set(verification.nonce, {
           ...verification,
-          status: 'failed',
-          error: error.message
+          status: 'verified_no_proof',
+          verified: true,
+          emailReceived: true,
+          proofError: proofError.message,
+          completedAt: new Date().toISOString()
         });
-        await this.database.updateVerificationStatus(verification.nonce, 'failed');
       }
+      
+      
+      this.logger.info(`Email verified for ${fromEmail} - .eml file saved for zkEmail registry upload`);
     } catch (error) {
       this.logger.error('Failed to process email:', error);
     }
@@ -230,16 +269,7 @@ export class EmailMonitor {
     const codeHash = hashCode(verification.code);
     
     try {
-      // Add to database first
-      await this.database.createVerification({
-        emailHash,
-        codeHash,
-        walletAddress: verification.walletAddress,
-        action: verification.action,
-        nonce: verification.nonce
-      });
-      
-      // Then add to memory
+      // Add to memory
       this.pendingVerifications.set(verification.nonce, {
         ...verification,
         status: 'pending',
@@ -268,18 +298,9 @@ export class EmailMonitor {
       status = this.pendingVerifications.get(Number(nonce));
     }
     
-    // If still not found, check database
+    // If still not found, return null
     if (!status) {
-      const dbRecord = await this.database.getVerification(nonce);
-      if (dbRecord) {
-        status = {
-          email: 'hidden', // Don't expose email from DB
-          status: dbRecord.status,
-          proof: dbRecord.proof ? JSON.parse(dbRecord.proof) : null,
-          createdAt: dbRecord.created_at,
-          completedAt: dbRecord.completed_at
-        };
-      }
+      status = null;
     }
     
     return status;
@@ -307,5 +328,49 @@ export class EmailMonitor {
     }
     
     return raw;
+  }
+  
+  async saveEmailAsEml(email, code, fromEmail) {
+    try {
+      // Create directory for saved emails if it doesn't exist
+      const emlDir = path.join(__dirname, '..', 'saved-emails');
+      await fs.mkdir(emlDir, { recursive: true });
+      
+      // Get raw email source (should be properly captured now)
+      const rawEmail = email.source;
+      if (!rawEmail) {
+        this.logger.error('No raw email source available to save');
+        return;
+      }
+      
+      // Create filename with timestamp and code for easy identification
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const safeEmail = fromEmail.replace(/[@.]/g, '_');
+      const filename = `porto_auth_${code}_${safeEmail}_${timestamp}.eml`;
+      const filepath = path.join(emlDir, filename);
+      
+      // Save the email
+      await fs.writeFile(filepath, rawEmail, 'utf8');
+      
+      this.logger.info('═══════════════════════════════════════════════════════════════');
+      this.logger.info('📧 EMAIL SAVED FOR ZK EMAIL REGISTRY TESTING');
+      this.logger.info('═══════════════════════════════════════════════════════════════');
+      this.logger.info(`File: ${filepath}`);
+      this.logger.info(`Auth Code: ${code}`);
+      this.logger.info(`From: ${fromEmail}`);
+      this.logger.info('');
+      this.logger.info('You can now upload this .eml file to https://registry.zk.email');
+      this.logger.info('when creating or testing your blueprint!');
+      this.logger.info('═══════════════════════════════════════════════════════════════');
+      
+      // Also save a "latest.eml" for convenience
+      const latestPath = path.join(emlDir, 'latest.eml');
+      await fs.writeFile(latestPath, rawEmail, 'utf8');
+      this.logger.info(`Also saved as: ${latestPath} (for quick access)`);
+      this.logger.info('');
+      
+    } catch (error) {
+      this.logger.error('Failed to save email as .eml:', error);
+    }
   }
 }

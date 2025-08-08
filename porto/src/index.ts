@@ -1,4 +1,5 @@
 export * as Chains from './core/Chains.js'
+export * as ChainsV2 from './core/ChainsV2.js'
 export * as Dialog from './core/Dialog.js'
 export * as Messenger from './core/Messenger.js'
 export * as Mode from './core/Mode.js'

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPublicClient, createWalletClient, http, parseEther, formatEther, custom } from 'viem';
 import { CONTRACTS, ANVIL_CHAIN } from '@/lib/contracts';
 import TestTokenABI from '@/lib/TestToken.abi.json';
+import { PasskeyManager } from './PasskeyManager';
 
 interface DashboardProps {
   accountAddress: string;
@@ -16,6 +17,7 @@ export function Dashboard({ accountAddress }: DashboardProps) {
   const [transferAmount, setTransferAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [accountInfo, setAccountInfo] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // Create public client
   const publicClient = createPublicClient({
@@ -28,6 +30,10 @@ export function Dashboard({ accountAddress }: DashboardProps) {
     const stored = localStorage.getItem('porto_account');
     if (stored) {
       setAccountInfo(JSON.parse(stored));
+    }
+    const email = localStorage.getItem('userEmail');
+    if (email) {
+      setUserEmail(email);
     }
     fetchBalances();
   }, []);
@@ -127,20 +133,20 @@ export function Dashboard({ accountAddress }: DashboardProps) {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen pt-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Porto Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <button
             onClick={logout}
-            className="text-red-500 hover:text-red-600 font-semibold"
+            className="text-gray-600 hover:text-gray-900 font-medium text-sm"
           >
-            Logout
+            Sign out
           </button>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Account Info</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Account Info</h2>
           <div className="space-y-2">
             <p className="text-gray-600">
               <span className="font-semibold">Address:</span>{' '}
@@ -170,15 +176,15 @@ export function Dashboard({ accountAddress }: DashboardProps) {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Mint Test Tokens</h3>
-            <p className="text-gray-600 mb-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Mint Test Tokens</h3>
+            <p className="text-gray-600 text-sm mb-4">
               Get 100 PTT tokens (gas sponsored)
             </p>
             <button
               onClick={mintTokens}
               disabled={isLoading}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg"
+              className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-gray-400 text-white font-medium py-2.5 px-6 rounded-lg transition-colors"
             >
               {isLoading ? 'Minting...' : 'Mint 100 PTT'}
             </button>
@@ -187,26 +193,26 @@ export function Dashboard({ accountAddress }: DashboardProps) {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Transfer Tokens</h3>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Transfer Tokens</h3>
             <input
               type="text"
               placeholder="Recipient address (0x...)"
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+              className="w-full p-2.5 border border-gray-200 rounded-lg mb-3 text-sm focus:outline-none focus:border-sky-500"
             />
             <input
               type="number"
               placeholder="Amount"
               value={transferAmount}
               onChange={(e) => setTransferAmount(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+              className="w-full p-2.5 border border-gray-200 rounded-lg mb-4 text-sm focus:outline-none focus:border-sky-500"
             />
             <button
               onClick={transferTokens}
               disabled={isLoading || !recipientAddress || !transferAmount}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg"
+              className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-gray-400 text-white font-medium py-2.5 px-6 rounded-lg transition-colors"
             >
               {isLoading ? 'Transferring...' : 'Transfer'}
             </button>
@@ -216,25 +222,64 @@ export function Dashboard({ accountAddress }: DashboardProps) {
           </div>
         </div>
 
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-2">🔐 Security Features:</h3>
-          <ul className="list-disc list-inside text-gray-700 space-y-1">
-            <li>No private key stored anywhere</li>
-            <li>All transactions signed with passkey (biometric)</li>
-            <li>Email recovery if you lose your device</li>
-            <li>Gas sponsored by Orchestrator (ERC-4337)</li>
-            <li>EIP-7702 smart account functionality</li>
-          </ul>
+        <div className="mt-8">
+          <PasskeyManager accountAddress={accountAddress} />
         </div>
 
-        <div className="mt-4 bg-yellow-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-2">📝 Demo Notes:</h3>
-          <ul className="list-disc list-inside text-gray-700 space-y-1">
-            <li>Email verification uses mock proofs (3-5s instead of 20-30s)</li>
-            <li>Passkey creation is simulated</li>
-            <li>Token operations use a funded account for demo</li>
-            <li>In production, all operations would use passkey signing</li>
-          </ul>
+        <div className="grid md:grid-cols-2 gap-6 mt-8">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Security Features</h3>
+            </div>
+            <ul className="text-gray-600 text-sm space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>No private key stored anywhere</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>All transactions signed with passkey</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>Email recovery if you lose your device</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>Gas sponsored by Orchestrator</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Demo Notes</h3>
+            </div>
+            <ul className="text-gray-700 text-sm space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>Email verification uses mock proofs</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>Passkey creation is simulated</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-400 mt-0.5">•</span>
+                <span>Token operations use funded account</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

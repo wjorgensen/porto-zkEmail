@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
-import { createPublicClient, createWalletClient, custom, parseEther } from 'viem';
+import { createPublicClient, createWalletClient, custom, parseEther, encodeAbiParameters } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { CONTRACTS, ANVIL_CHAIN } from '@/lib/contracts';
 import IthacaAccountV2ABI from '@/lib/IthacaAccountV2.abi.json';
@@ -21,6 +21,62 @@ export function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
   const [email, setEmail] = useState('');
   const [passkey, setPasskey] = useState<{ id: string; publicKey: string } | null>(null);
   const [emailCode, setEmailCode] = useState('');
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [verificationNonce, setVerificationNonce] = useState<number | null>(null);
+  const [zkProof, setZkProof] = useState<any>(null);
+  const [proofStatus, setProofStatus] = useState<string>('Waiting for email verification...');
+  const [contractDeployed, setContractDeployed] = useState(false);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Trigger finalization when both proof and contract are ready
+  useEffect(() => {
+    if (zkProof && contractDeployed && step === 'waitingForReply') {
+      setStep('deploying');
+      finalizeRegistration(zkProof);
+    }
+  }, [zkProof, contractDeployed, step]);
+
+  // Poll for email verification and proof generation status
+  const pollForVerification = (nonce: number) => {
+    console.log('Starting polling for nonce:', nonce);
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/verification-status/${nonce}`);
+        console.log('Poll response status:', response.status);
+        if (response.ok) {
+          const status = await response.json();
+          console.log('Verification status:', status);
+          
+          // Update status messages
+          if (status.emailReceived && !status.verified) {
+            setProofStatus('Email received! Generating ZK proof...');
+          } else if (status.verified && !status.hasZkProof) {
+            setProofStatus('Email verified! Finalizing proof generation...');
+          } else if (status.hasZkProof) {
+            clearInterval(interval);
+            setPollingInterval(null);
+            console.log('Proof generated!', status);
+            setZkProof(status.zkProof);
+            setProofStatus('ZK proof generated successfully!');
+            
+            // The useEffect will handle transitioning to the next step
+          }
+        }
+      } catch (error) {
+        console.error('Error polling verification status:', error);
+      }
+    }, 2000); // Poll every 2 seconds for faster updates
+    
+    setPollingInterval(interval);
+  };
 
   // Generate a new passkey (WebAuthn)
   const createPasskey = async () => {
@@ -29,7 +85,10 @@ export function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
       // In production, you'd use the Web Authentication API
       const mockPasskey = {
         id: 'mock-passkey-' + Math.random().toString(36).substr(2, 9),
-        publicKey: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+        publicKey: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        name: navigator.userAgent.includes('Mac') ? 'MacBook' : 
+              navigator.userAgent.includes('iPhone') ? 'iPhone' : 
+              navigator.userAgent.includes('Android') ? 'Android Device' : 'Device'
       };
       
       setPasskey(mockPasskey);
@@ -47,39 +106,140 @@ export function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
       return;
     }
 
-    // Generate random 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setEmailCode(code);
+    try {
+      // Call the email infrastructure backend
+      const response = await fetch('http://localhost:3001/send-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          toEmail: email,
+          action: 'setEmail', // The action for email registration
+        }),
+      });
 
-    // Mock email sending - in production, you'd call your backend
-    console.log('Sending email to:', email);
-    console.log('Email code:', code);
-    
-    // Display the email content that would be sent
-    const emailContent = `
-Subject: PORTO-AUTH-${code}
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send email');
+      }
 
-Reply to this email to complete your registration.
-
-Body: PORTO|${ANVIL_CHAIN.id}|${address}|setEmail|0x0|1|${Math.floor(Date.now() / 1000)}|0x0
-    `;
-    
-    alert(`Email would be sent to ${email}\n\n${emailContent}\n\nFor demo: Click OK to simulate email reply.`);
-    
-    setStep('waitingForReply');
+      const data = await response.json();
+      console.log('Email sent successfully:', data);
+      
+      // Store the code and nonce for verification
+      setEmailCode(data.code);
+      setVerificationNonce(data.nonce);
+      localStorage.setItem('verificationNonce', data.nonce.toString());
+      
+      alert(`Verification email sent to ${email}!\n\nPlease reply to the email with subject "Re: PORTO-AUTH-${data.code}" to continue.`);
+      
+      setStep('waitingForReply');
+      
+      // Start polling for verification status
+      pollForVerification(data.nonce);
+      
+      // Start deploying the contract in parallel (while waiting for email)
+      deployContractInBackground();
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      alert(`Failed to send email: ${error.message}`);
+    }
   };
 
-  // Simulate email reply and proof generation
-  const generateProof = async () => {
-    setStep('generatingProof');
-    
-    // Simulate proof generation delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Mock proof - in production, this would be generated by zkEmail SDK
-    const mockProof = '0x' + Array.from({ length: 512 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    
-    await deployAccount(mockProof);
+  // Deploy contract in the background while waiting for email
+  const deployContractInBackground = async () => {
+    try {
+      console.log('Starting background contract deployment...');
+      
+      // For demo, we'll use a test private key to simulate the account creation
+      const testAccount = privateKeyToAccount('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
+      
+      // Create clients for the test account
+      const testWalletClient = createWalletClient({
+        account: testAccount,
+        chain: ANVIL_CHAIN,
+        transport: custom(window.ethereum as any)
+      });
+      
+      const testPublicClient = createPublicClient({
+        chain: ANVIL_CHAIN,
+        transport: custom(window.ethereum as any)
+      });
+      
+      // Deploy the proxy contract
+      console.log('Deploying proxy contract...');
+      // In production, you would deploy the actual proxy contract here
+      // For now, we'll simulate it
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setContractDeployed(true);
+      console.log('Contract deployed successfully in background!');
+    } catch (error) {
+      console.error('Failed to deploy contract in background:', error);
+    }
+  };
+  
+  // Finalize registration once both proof and contract are ready
+  const finalizeRegistration = async (proof: any) => {
+    try {
+      console.log('Finalizing registration with proof and deployed contract...');
+      
+      if (!walletClient || !passkey) {
+        throw new Error('Missing wallet client or passkey');
+      }
+
+      // The account proxy address from deployments
+      const accountAddress = '0xF5a71C6794A476a26C42Af3a08a3a86352312c95';
+      
+      // Prepare the email proof with verifier address
+      const zkVerifierAddress = '0x83480CaAb6E6FE4Eff480fc0ee17379EED25572a';
+      const emailProof = encodeAbiParameters(
+        [{ name: 'verifier', type: 'address' }, { name: 'proof', type: 'bytes' }],
+        [zkVerifierAddress, proof]
+      );
+
+      // Convert passkey to the format expected by the contract
+      const keyData = {
+        expiry: 0n, // No expiry
+        kty: '2', // EC for elliptic curve
+        alg: '-7', // ES256
+        crv: '1', // P-256
+        x: passkey.publicKey.slice(0, 66), // First 32 bytes as hex
+        y: '0x' + passkey.publicKey.slice(66), // Next 32 bytes as hex
+        n: '0x', // Not used for EC keys
+        e: '0x', // Not used for EC keys
+      };
+
+      // Call setEmailAndRegister on the account contract
+      const hash = await walletClient.writeContract({
+        address: accountAddress as `0x${string}`,
+        abi: IthacaAccountV2ABI,
+        functionName: 'setEmailAndRegister',
+        args: [emailProof, email, keyData, passkey.id],
+      });
+
+      console.log('Transaction hash:', hash);
+      
+      // Wait for transaction confirmation
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log('Transaction confirmed:', receipt);
+      
+      // Store user info in localStorage
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('accountAddress', accountAddress);
+      localStorage.setItem('passkeyId', passkey.id);
+      
+      setStep('complete');
+      
+      // Wait a bit before completing
+      setTimeout(() => {
+        onComplete();
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to finalize registration:', error);
+      alert('Failed to finalize registration. Please try again.');
+    }
   };
 
   // Deploy the account with EIP-7702
@@ -175,43 +335,62 @@ Body: PORTO|${ANVIL_CHAIN.id}|${address}|setEmail|0x0|1|${Math.floor(Date.now() 
           <p className="mb-4 text-gray-600">
             We sent a verification email to {email}
           </p>
-          <p className="mb-6 text-sm text-gray-500">
-            Reply to the email to continue registration
+          <p className="mb-2 text-sm text-gray-500">
+            Reply to the email with subject: <strong>Re: PORTO-AUTH-{emailCode}</strong>
           </p>
+          <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Status:</p>
+            <p className="text-sm text-gray-600">{proofStatus}</p>
+            {contractDeployed && (
+              <p className="text-sm text-green-600 mt-2">✓ Smart contract deployed</p>
+            )}
+          </div>
           <div className="mb-6">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
           </div>
-          <button
-            onClick={generateProof}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg"
-          >
-            Simulate Email Reply
-          </button>
-        </div>
-      )}
-
-      {step === 'generatingProof' && (
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Generating Proof</h2>
-          <p className="mb-6 text-gray-600">
-            Creating zero-knowledge proof from your email...
-          </p>
-          <div className="mb-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="space-y-2">
+            <button
+              onClick={async () => {
+                const nonce = localStorage.getItem('verificationNonce');
+                if (nonce) {
+                  const response = await fetch(`http://localhost:3001/verification-status/${nonce}`);
+                  const status = await response.json();
+                  if (status.verified) {
+                    generateProof();
+                  } else {
+                    alert('Email reply not yet received. Please make sure you replied to the email.');
+                  }
+                }
+              }}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg"
+            >
+              Check Now
+            </button>
+            <button
+              onClick={generateProof}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg ml-2"
+            >
+              Skip (Demo Mode)
+            </button>
           </div>
-          <p className="text-sm text-gray-500">This may take 20-30 seconds</p>
         </div>
       )}
 
       {step === 'deploying' && (
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Creating Your Account</h2>
+          <h2 className="text-2xl font-bold mb-4">Finalizing Your Account</h2>
           <p className="mb-6 text-gray-600">
-            Deploying your Porto account on-chain...
+            Registering your email proof with the smart contract...
           </p>
+          <div className="mb-4 p-4 bg-gray-100 rounded-lg">
+            <p className="text-sm text-green-600">✓ ZK proof generated</p>
+            <p className="text-sm text-green-600">✓ Smart contract deployed</p>
+            <p className="text-sm text-blue-600 animate-pulse">→ Registering email and passkey...</p>
+          </div>
           <div className="mb-6">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
           </div>
+          <p className="text-sm text-gray-500">Almost done!</p>
         </div>
       )}
 

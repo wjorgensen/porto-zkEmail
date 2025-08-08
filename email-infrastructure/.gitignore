@@ -21,3 +21,6 @@ proof-cache/
 # OS files
 .DS_Store
 Thumbs.db
+# Saved email files for testing
+saved-emails/
+*.eml
