@@ -14,6 +14,7 @@ node_modules/
 circuits/*.zkey
 circuits/*.wasm
 circuits/*.r1cs
+circuit/*.zkey
 
 # Proof cache
 proof-cache/
